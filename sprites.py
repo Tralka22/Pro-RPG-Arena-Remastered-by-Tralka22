@@ -26,6 +26,7 @@ class Player(pygame.sprite.Sprite): # Класс игрока
         self.max_hp = 20
         self.damage = 2
         self.armor = 1
+        self.weapon = 'hand'
         self.money = 0
         # Инициализация используемых спрайтов
         self.image1_down = load_image(CHARSET + '1_down.png', -1)
@@ -191,6 +192,7 @@ class Chest(pygame.sprite.Sprite):
         if pool in [WEAPONS_COMMON, WEAPONS_RARE]:
             if self.game.player.damage < int(found_item[1]):
                 self.game.player.damage = int(found_item[1])
+                self.game.player.weapon = found_item[0]
                 self.game.console(f"You've found {found_item[0]}, which has {found_item[1]} damage.")
             else:
                 self.game.player.money += int(found_item[1])
@@ -231,7 +233,7 @@ class Mushroom(pygame.sprite.Sprite):
     def loot(self):
         healed = (self.game.lvl // 5) + random.randint(1, 5)
         self.game.player.hp += healed
-        self.game.console(f"You've found a mushroom which restored {healed} of your health.")
+        self.game.console(f"You've found a mushroom which restored {healed} of your HP.")
         self.kill()
 
         
@@ -261,7 +263,7 @@ class Skeleton(pygame.sprite.Sprite):
         self.hp = (self.game.lvl // 2) + 5
         self.tik = 0
         
-        self.at = 0
+        self.attack_cooldown = 0
         self.bat = 1
         
         self.sleeping = True
@@ -314,28 +316,20 @@ class Skeleton(pygame.sprite.Sprite):
             if pygame.mouse.get_pressed() and self.bat == 1:
                 self.bat = 0
                 self.hp -= self.game.player.damage
-                print('-------------------------')
-                print(f'you caused damage {self.game.player.damage}')
+                self.game.console(f'You hit the skeleton with {self.game.player.weapon} and he took {self.game.player.damage} damage.')
                 if self.hp > 0:
-                    print(f'enemy lives {self.hp}')
+                    self.game.console(f'The skeleton still has {self.hp} HP.')
                 else:
-                    print('enemy dies')
+                    self.game.console("You've killed a skeleton")
                     loot = (self.game.lvl // 2) + random.randint(2, 4)
                     self.game.player.money += loot
                     self.game.console(f"You've found {loot}$.")
-            self.at += 1
-            if self.at == 200:
-                if self.game.player.armor > random.randint(0, 100) > 0:
-                    self.game.player.hp -= self.damage // 2
-                    print('-------------------------')
-                    print(f'you get damage {self.damage // 2}')
-                    print('-------------------------')
-                else:
-                    self.game.player.hp -= self.damage
-                    print('-------------------------')
-                    print(f'you get damage {self.damage}')
-                    print('-------------------------')
-                self.at = 0
+            self.attack_cooldown += 1
+            if self.attack_cooldown == 200:
+                damaged = int(self.damage / (self.game.player.armor + 1) * 2)
+                self.game.player.hp -= damaged
+                self.game.console(f"You've took {damaged} damage.")
+                self.attack_cooldown = 0
                 self.bat = 1
         else:
             self.game.player.target = None

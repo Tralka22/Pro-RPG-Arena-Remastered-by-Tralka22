@@ -1,9 +1,11 @@
-import pygame
 import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'hide'
+os.environ['SDL_VIDEO_WINDOW_POS'] = '0,30'
+import pygame
 import random
 import sprites
+import datetime
 from config import *
-os.environ['SDL_VIDEO_WINDOW_POS'] = '0,30'
 
 
 class Game:# Класс игры, чтобы хранить в нём всякую всячину и функции игры
@@ -24,6 +26,7 @@ class Game:# Класс игры, чтобы хранить в нём всяку
         self.player = sprites.Player(self)
         self.loots = pygame.sprite.Group()
         self.enemies = pygame.sprite.Group()
+        self.texts = ['You woke up.']
         self.running = True
         self.run()
 
@@ -45,10 +48,14 @@ class Game:# Класс игры, чтобы хранить в нём всяку
                         self.screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
                     else:
                         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+                if event.key == pygame.K_F12:
+                    date = datetime.datetime.now()
+                    date = '-'.join([str(i) for i in [date.year, date.month, date.day, date.hour, date.minute, date.second, date.microsecond]])
+                    pygame.image.save(self.screen, f'screenshots/screenshot-{date}.jpg')
         self.all_sprites.update()
     
     def console(self, text): # Адекватный (!!!) вывод текста
-        print(text) # Пока что нет
+        self.texts.append(text)
     
     def next_level(self):
         self.lvl += 1
@@ -71,11 +78,11 @@ class Game:# Класс игры, чтобы хранить в нём всяку
         
         # Обучение
         if self.lvl == 0:
-            ui_tutorial_wasd = ui_end = font.render('Use W, A, S, D to move', 1, RED)
+            ui_tutorial_wasd = font.render('Use W, A, S, D to move', 1, RED)
             self.screen.blit(ui_tutorial_wasd, (200, 100))
             
-            ui_tutorial_wasd = ui_end = font.render('Use SHIFT to sprint', 1, RED)
-            self.screen.blit(ui_tutorial_wasd, (200, 150))
+            ui_tutorial_shift = font.render('Use SHIFT to sprint', 1, RED)
+            self.screen.blit(ui_tutorial_shift, (200, 150))
         
         self.all_sprites.draw(self.screen)
         
@@ -92,7 +99,10 @@ class Game:# Класс игры, чтобы хранить в нём всяку
         self.screen.blit(ui_money, (50, 10))
         ui_end = font.render(self.end, 1, RED)
         self.screen.blit(ui_end, (300, 300))
-            
+        
+        ui_console = font.render(self.texts[-1], 1, RED) # Консось нових поколеня
+        self.screen.blit(ui_console, (40, 560))
+        
         pygame.display.flip()
 
 game = Game()
