@@ -20,14 +20,9 @@ class Game:# Класс игры, чтобы хранить в нём всяку
         self.lvl = 0
         self.end = ''
         self.bg_color = (105, random.randrange(150, 255, 15), 105)
-        self.next_l = 0
-        self.hpx, self.hpy = 400, 400
-        self.x, self.u = None, None
-        self.transportC = None
         self.all_sprites = pygame.sprite.Group()
         self.player = sprites.Player(self)
-        self.chst = sprites.Chest(self)
-        self.skel = sprites.Skeletron(self)
+        self.loots = pygame.sprite.Group()
         self.running = True
         self.run()
 
@@ -50,6 +45,17 @@ class Game:# Класс игры, чтобы хранить в нём всяку
                     else:
                         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         self.all_sprites.update()
+    
+    def console(self, text): # Адекватный (!!!) вывод текста
+        print(text) # Пока что нет
+    
+    def next_level(self):
+        self.lvl += 1
+        self.bg_color = (random.randrange(150, 255, 15), random.randrange(150, 255, 15), random.randrange(150, 255, 15))
+        if random.random() <= 0.9:
+            self.chest = sprites.Chest(self)
+        if random.random() <= 0.4:
+            self.skeleton = sprites.Skeleton(self)
     
     def draw(self):# Отрисовка
         self.screen.fill(self.bg_color)
