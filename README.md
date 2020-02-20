@@ -5,5 +5,7 @@
 - [x] Moved all the API to the config file
 - [x] Added mushrooms
 - [x] Improved and optimized random system
+- [x] Better console
+- [x] Screenshots (press F12 to make one)
 - [ ] Diversity of enemies
 - [ ] Ending cutscene
