@@ -22,7 +22,8 @@ class Player(pygame.sprite.Sprite): # Класс игрока
         self.game = game
         self.tik = 0 # Переменная, указывающая на то, сколько прошло времени (для анимации персонажа)
         self.lvl = 0
-        self.life = 100
+        self.hp = 20
+        self.max_hp = 20
         self.damage = 2
         self.armor = 1
         self.money = 0
@@ -74,10 +75,8 @@ class Player(pygame.sprite.Sprite): # Класс игрока
         elif keys[pygame.K_s]:
             self.go_down = 1
         
-        if self.alive == True:
-            self.tik += 1
-            if self.tik == 41:
-                self.tik = 0
+        if self.alive:
+            self.tik = (self.tik + 1) % 41
             if self.go_up == 1:
                 if self.tik == 10:
                     self.image = self.image2_up
@@ -146,7 +145,16 @@ class Player(pygame.sprite.Sprite): # Класс игрока
         if loot_hits:
             loot_hits[0].loot()
         
-        if self.life <= 0:
+        enemy_hits = pygame.sprite.spritecollide(self, self.game.enemies, False)
+        if enemy_hits:
+            enemy_hits[0].in_fight = True
+            enemy_hits[0].sleeping = True
+        
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
+        
+        if self.hp <= 0:
+            self.hp = 0
             self.attack = None
             self.game.end = 'Game Over!'
         if self.game.lvl == -110:
@@ -162,7 +170,7 @@ class Chest(pygame.sprite.Sprite):
         super().__init__(game.all_sprites)
         self.game = game
         self.game.loots.add(self)
-        self.image = load_image('chest1.png', -1)
+        self.image = load_image(CHARSET + '_chest.png', -1)
         self.rect = self.image.get_rect()
         self.rect.x = random.randrange(40, 731)
         self.rect.y = random.randrange(40, 531)
@@ -183,24 +191,55 @@ class Chest(pygame.sprite.Sprite):
         if pool in [WEAPONS_COMMON, WEAPONS_RARE]:
             if self.game.player.damage < int(found_item[1]):
                 self.game.player.damage = int(found_item[1])
-                self.game.console(f"You've found {found_item[0]}, which has {found_item[1]} damage")
+                self.game.console(f"You've found {found_item[0]}, which has {found_item[1]} damage.")
             else:
                 self.game.player.money += int(found_item[1])
                 self.game.console(f"You've found {found_item[1]}$")
         else:
             if self.game.player.armor < int(found_item[1]):
                 self.game.player.armor = int(found_item[1])
-                self.game.console(f"You've found {found_item[0]}, which has {found_item[1]} armor")
+                self.game.console(f"You've found {found_item[0]}, which has {found_item[1]} armor.")
             else:
                 self.game.player.money += int(found_item[1])
-                self.game.console(f"You've found {found_item[1]}$")
+                self.game.console(f"You've found {found_item[1]}$.")
         self.kill()
-            
+
+
+class Mushroom(pygame.sprite.Sprite):
+    def __init__(self, game):
+        super().__init__(game.all_sprites)
+        self.game = game
+        self.game.loots.add(self)
+        self.image1 = load_image(CHARSET + '1_mushroom.png', -1)
+        self.image2 = load_image(CHARSET + '2_mushroom.png', -1)
+        self.image3 = load_image(CHARSET + '3_mushroom.png', -1)
+        self.image = self.image1
+        self.rect = self.image.get_rect()
+        self.rect.x = random.randrange(40, 744)
+        self.rect.y = random.randrange(40, 544)
+        self.tik = 0
+    
+    def update(self):
+        self.tik = (self.tik + 1) % 31
+        if self.tik == 0:
+            self.image = self.image1
+        if self.tik == 10:
+            self.image = self.image2
+        if self.tik == 20:
+            self.image = self.image3
+    
+    def loot(self):
+        healed = (self.game.lvl // 5) + random.randint(1, 5)
+        self.game.player.hp += healed
+        self.game.console(f"You've found a mushroom which restored {healed} of your health.")
+        self.kill()
+
         
 class Skeleton(pygame.sprite.Sprite):
     def __init__(self, game):
         super().__init__(game.all_sprites)
         self.game = game
+        self.game.enemies.add(self)
         self.image1_down = load_image('skel1_down.png', -1)
         self.image2_down = load_image('skel2_down.png', -1)
         self.image3_down = load_image('skel3_down.png', -1)
@@ -215,14 +254,13 @@ class Skeleton(pygame.sprite.Sprite):
         self.image3_left = load_image('skel3_left.png', -1)
         self.image = self.image1_down
         self.rect = self.image.get_rect()
-        
         self.rect.x = random.randrange(40, 728)
         self.rect.y = random.randrange(40, 514)
-        
         self.damage = (self.game.lvl // 5) + 1
         self.armor = (self.game.lvl // 10) + 1
         self.hp = (self.game.lvl // 2) + 5
         self.tik = 0
+        
         self.at = 0
         self.bat = 1
         
@@ -230,17 +268,13 @@ class Skeleton(pygame.sprite.Sprite):
         self.in_fight = False
 
     def update(self):
-        blocks_hit_list = pygame.sprite.spritecollide(self, self.game.all_sprites, False)
-        if len(blocks_hit_list) > 1:
-            if '[<Player sprite(in 1 groups)>, <Skeletron sprite(in 1 groups)>]' == str(blocks_hit_list):
-                self.in_fight = True
-        else:
-            self.in_fight = False
-        self.tik = (self.tik + 1) % 41
+        if not self.game.player.alive:
+            self.kill()
         target_x, target_y = self.game.player.rect.x, self.game.player.rect.y
         if math.sqrt((self.rect.x - target_x) ** 2 + (self.rect.y - target_y) ** 2) <= 200 and self.sleeping:
             self.sleeping = False
-        if (not self.sleeping) and self.in_fight:
+        if (not self.sleeping) and (not self.in_fight):
+            self.tik = (self.tik + 1) % 41
             if target_x > self.rect.x:
                 self.rect.x += 1
                 if self.tik == 0:
@@ -285,19 +319,19 @@ class Skeleton(pygame.sprite.Sprite):
                 if self.hp > 0:
                     print(f'enemy lives {self.hp}')
                 else:
-                    print(f'enemy dies')
-                    print('you find 2$')
-                    self.game.player.money += 2
-                print('-------------------------')
+                    print('enemy dies')
+                    loot = (self.game.lvl // 2) + random.randint(2, 4)
+                    self.game.player.money += loot
+                    self.game.console(f"You've found {loot}$.")
             self.at += 1
             if self.at == 200:
                 if self.game.player.armor > random.randint(0, 100) > 0:
-                    self.game.player.life -= self.damage // 2
+                    self.game.player.hp -= self.damage // 2
                     print('-------------------------')
                     print(f'you get damage {self.damage // 2}')
                     print('-------------------------')
                 else:
-                    self.game.player.life -= self.damage
+                    self.game.player.hp -= self.damage
                     print('-------------------------')
                     print(f'you get damage {self.damage}')
                     print('-------------------------')

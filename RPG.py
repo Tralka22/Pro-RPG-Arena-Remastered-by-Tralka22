@@ -10,12 +10,12 @@ class Game:# Класс игры, чтобы хранить в нём всяку
     def __init__(self):
         pygame.mixer.init()
         pygame.init()
-        pygame.mixer.music.load('data/theme-remix-1.wav')
+        pygame.mixer.music.load(f'data/{CHARSET}_theme.wav')
         pygame.mixer.music.play(-1)
         self.fullscreen = False
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("RPG Arena Pro: Rebirth")
-        pygame.display.set_icon(sprites.load_image('icon-new.png'))
+        pygame.display.set_icon(sprites.load_image(CHARSET + '_icon.png'))
         self.clock = pygame.time.Clock()
         self.lvl = 0
         self.end = ''
@@ -23,6 +23,7 @@ class Game:# Класс игры, чтобы хранить в нём всяку
         self.all_sprites = pygame.sprite.Group()
         self.player = sprites.Player(self)
         self.loots = pygame.sprite.Group()
+        self.enemies = pygame.sprite.Group()
         self.running = True
         self.run()
 
@@ -52,10 +53,15 @@ class Game:# Класс игры, чтобы хранить в нём всяку
     def next_level(self):
         self.lvl += 1
         self.bg_color = (random.randrange(150, 255, 15), random.randrange(150, 255, 15), random.randrange(150, 255, 15))
+        for sprite in self.all_sprites:
+            if sprite != self.player:
+                sprite.kill()
         if random.random() <= 0.9:
             self.chest = sprites.Chest(self)
         if random.random() <= 0.4:
             self.skeleton = sprites.Skeleton(self)
+        if random.random() <= 0.1:
+            self.mushroom = sprites.Mushroom(self)
     
     def draw(self):# Отрисовка
         self.screen.fill(self.bg_color)
@@ -80,7 +86,7 @@ class Game:# Класс игры, чтобы хранить в нём всяку
         self.screen.blit(ui_damage, (500, 10))
         ui_armor = font.render(f'Armor: {self.player.armor}', 1, RED)
         self.screen.blit(ui_armor, (350, 10))
-        ui_hp = font.render(f'Life: {self.player.life}', 1, RED)
+        ui_hp = font.render(f'Life: {self.player.hp}', 1, RED)
         self.screen.blit(ui_hp, (200, 10))
         ui_money = font.render(f'Money: {self.player.money}$', 1, RED)
         self.screen.blit(ui_money, (50, 10))

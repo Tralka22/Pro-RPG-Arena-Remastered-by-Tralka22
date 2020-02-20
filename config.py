@@ -10,10 +10,10 @@ GREEN = (150, 255, 105)
 RED = (255, 50, 50)
 
 # Списки снаряжения
-WEAPONS_COMMON = ['latex glove:3', 'zombie hand:4', 'small sword:5', 'daggers:6']
-WEAPONS_RARE = ['magic book:7', 'hook:8', 'knuckle:9']
+WEAPONS_COMMON = ['a latex glove:3', "a zombie's hand:4", 'a small sword:5', 'a dagger:6']
+WEAPONS_RARE = ['a magic book:7', 'a meat hook:8', 'a knuckle:9']
 ARMOR_COMMON = ['wooden armor:2', 'plastic armor:3', 'chain armor:4']
-ARMOR_RARE = ['iron armor:5', 'magic water armor:6', 'ninja clothes:7']
+ARMOR_RARE = ['iron armor:5', 'magical water armor:6', 'ninja hat:7']
 
 #Спрайты
-CHARSET = 'war' # 'P' для экспериментальных спрайтов
+CHARSET = 'war' # 'P' для экспериментальных спрайтов, 'war' для классических (но ворованных)
